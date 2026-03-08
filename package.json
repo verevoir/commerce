@@ -1,0 +1,43 @@
+{
+  "name": "@verevoir/commerce",
+  "version": "0.1.0-beta.1",
+  "description": "Abstract e-commerce primitives — products, baskets, orders, payments with pricing and tax engine hooks",
+  "homepage": "https://verevoir.io",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com:verevoir/commerce.git"
+  },
+  "funding": "https://buymeacoffee.com/verevoir",
+  "scripts": {
+    "build": "tsup",
+    "prepare": "npm run build",
+    "test": "vitest run",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.1",
+    "vitest": "^3.2.4"
+  }
+}

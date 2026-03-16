@@ -113,3 +113,44 @@ export interface CommerceConfig {
   readonly taxEngine?: TaxEngine;
   readonly context?: EngineContext;
 }
+
+// --- Subscriptions ---
+
+/** Billing interval for a subscription plan. */
+export type SubscriptionInterval = 'month' | 'year';
+
+/** Subscription lifecycle status. */
+export type SubscriptionStatus =
+  | 'trialling'
+  | 'active'
+  | 'past_due'
+  | 'paused'
+  | 'cancelled';
+
+/**
+ * A subscription plan — a recurring product with a billing interval and feature set.
+ * Extends the minimum Product fields.
+ */
+export interface SubscriptionPlan {
+  readonly id: string;
+  readonly type: string;
+  readonly basePrice: Money;
+  readonly interval: SubscriptionInterval;
+  readonly features: readonly string[];
+}
+
+/**
+ * A subscription — the state of a customer's recurring relationship with a plan.
+ * Consumer owns persistence. Status is synced from the billing provider.
+ */
+export interface Subscription {
+  readonly id: string;
+  readonly planId: string;
+  readonly status: SubscriptionStatus;
+  readonly currentPeriodStart: number;
+  readonly currentPeriodEnd: number;
+  /** Optional trial end timestamp (seconds since epoch). */
+  readonly trialEnd?: number;
+  /** External billing provider ID (e.g. Stripe subscription ID). */
+  readonly externalId?: string;
+}

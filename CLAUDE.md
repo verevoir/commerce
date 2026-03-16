@@ -69,12 +69,13 @@ make run     # No-op (library)
 
 ## Architecture
 
-- `src/types.ts` — Core interfaces: Money, Product, LineItem, Basket, Order, Payment, PricingEngine, TaxEngine
+- `src/types.ts` — Core interfaces: Money, Product, LineItem, Basket, Order, Payment, PricingEngine, TaxEngine, SubscriptionPlan, Subscription
 - `src/money.ts` — Money factory and arithmetic helpers
 - `src/pricing.ts` — Pricing engine pipeline runner with default passthrough
 - `src/tax.ts` — Per-item tax engine with default flat rate
 - `src/basket.ts` — Basket operations: create, add, remove, update items
 - `src/order.ts` — Order operations: convert basket, apply payment, balance tracking
+- `src/subscription.ts` — Subscription operations: create, renew, change plan, status evaluation, feature entitlements
 - `src/index.ts` — Public API exports
 
 ## Dependencies

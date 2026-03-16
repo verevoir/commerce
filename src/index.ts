@@ -12,6 +12,10 @@ export type {
   TaxEngine,
   EngineContext,
   CommerceConfig,
+  SubscriptionInterval,
+  SubscriptionStatus,
+  SubscriptionPlan,
+  Subscription,
 } from './types.js';
 
 // Money helpers
@@ -56,3 +60,16 @@ export {
   changeOwed,
   orderTotals,
 } from './order.js';
+
+// Subscription
+export type { CreateSubscriptionOptions } from './subscription.js';
+export {
+  createSubscription,
+  updateSubscriptionStatus,
+  changeSubscriptionPlan,
+  renewSubscription,
+  isSubscriptionActive,
+  isInGracePeriod,
+  effectiveFeatures,
+  hasFeature,
+} from './subscription.js';

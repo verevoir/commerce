@@ -1,6 +1,6 @@
 {
   "name": "@verevoir/commerce",
-  "version": "0.1.0-alpha.2",
+  "version": "0.1.1-alpha.1",
   "description": "Abstract e-commerce primitives — products, baskets, orders, payments with pricing and tax engine hooks",
   "homepage": "https://verevoir.io",
   "license": "MIT",

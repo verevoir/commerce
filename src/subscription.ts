@@ -62,7 +62,9 @@ export function renewSubscription(
 
 /** Check whether a subscription is in an active billing state (active or trialling). */
 export function isSubscriptionActive(subscription: Subscription): boolean {
-  return subscription.status === 'active' || subscription.status === 'trialling';
+  return (
+    subscription.status === 'active' || subscription.status === 'trialling'
+  );
 }
 
 /**

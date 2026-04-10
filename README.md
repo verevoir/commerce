@@ -45,7 +45,7 @@ const config: CommerceConfig = {
 // Build a basket
 let basket = createBasket('basket-1');
 basket = addItem(basket, shirt, 2, config); // 2 shirts
-basket = addItem(basket, book, 1, config);  // 1 book
+basket = addItem(basket, book, 1, config); // 1 book
 
 // Convert to order and pay
 const order = convertToOrder(basket, 'order-1');
@@ -61,56 +61,56 @@ console.log(isFullyPaid(paid)); // true
 
 ### Money
 
-| Export | Description |
-| --- | --- |
-| `money(amount, currency)` | Create a Money value |
-| `addMoney(a, b)` | Add two Money values (same currency) |
-| `subtractMoney(a, b)` | Subtract (same currency) |
-| `multiplyMoney(m, factor)` | Multiply by a scalar |
-| `zeroMoney(currency)` | Zero value for a currency |
+| Export                     | Description                          |
+| -------------------------- | ------------------------------------ |
+| `money(amount, currency)`  | Create a Money value                 |
+| `addMoney(a, b)`           | Add two Money values (same currency) |
+| `subtractMoney(a, b)`      | Subtract (same currency)             |
+| `multiplyMoney(m, factor)` | Multiply by a scalar                 |
+| `zeroMoney(currency)`      | Zero value for a currency            |
 
 ### Basket
 
-| Export | Description |
-| --- | --- |
-| `createBasket(id)` | Create an empty basket |
-| `addItem(basket, product, qty, config?)` | Add or increase quantity |
-| `removeItem(basket, productId)` | Remove a product entirely |
-| `updateItemQuantity(basket, productId, qty, product, config?)` | Set quantity |
-| `recalculateBasket(basket, products, config?)` | Re-run all pricing and tax |
-| `basketTotal(basket)` | Get subtotal, tax, and total |
+| Export                                                         | Description                  |
+| -------------------------------------------------------------- | ---------------------------- |
+| `createBasket(id)`                                             | Create an empty basket       |
+| `addItem(basket, product, qty, config?)`                       | Add or increase quantity     |
+| `removeItem(basket, productId)`                                | Remove a product entirely    |
+| `updateItemQuantity(basket, productId, qty, product, config?)` | Set quantity                 |
+| `recalculateBasket(basket, products, config?)`                 | Re-run all pricing and tax   |
+| `basketTotal(basket)`                                          | Get subtotal, tax, and total |
 
 ### Order
 
-| Export | Description |
-| --- | --- |
-| `convertToOrder(basket, orderId)` | Freeze basket into an order |
-| `applyPayment(order, payment)` | Record a payment against an order |
-| `updatePaymentStatus(order, paymentId, status)` | Change payment status |
-| `isFullyPaid(order)` | Check if balance is zero or negative |
-| `changeOwed(order)` | Get overpayment amount |
-| `orderTotals(order)` | Get subtotal, tax, and total |
+| Export                                          | Description                          |
+| ----------------------------------------------- | ------------------------------------ |
+| `convertToOrder(basket, orderId)`               | Freeze basket into an order          |
+| `applyPayment(order, payment)`                  | Record a payment against an order    |
+| `updatePaymentStatus(order, paymentId, status)` | Change payment status                |
+| `isFullyPaid(order)`                            | Check if balance is zero or negative |
+| `changeOwed(order)`                             | Get overpayment amount               |
+| `orderTotals(order)`                            | Get subtotal, tax, and total         |
 
 ### Engines
 
-| Export | Description |
-| --- | --- |
-| `fixedDiscountEngine(amount)` | Subtract a fixed amount per unit |
-| `percentageDiscountEngine(rate)` | Subtract a percentage (0–1) |
-| `flatRateTaxEngine(rate)` | Same tax rate for all products |
-| `productTypeTaxEngine(rates, defaultRate)` | Tax rate by `product.type` |
+| Export                                     | Description                      |
+| ------------------------------------------ | -------------------------------- |
+| `fixedDiscountEngine(amount)`              | Subtract a fixed amount per unit |
+| `percentageDiscountEngine(rate)`           | Subtract a percentage (0–1)      |
+| `flatRateTaxEngine(rate)`                  | Same tax rate for all products   |
+| `productTypeTaxEngine(rates, defaultRate)` | Tax rate by `product.type`       |
 
 ## Architecture
 
-| File | Responsibility |
-| --- | --- |
-| `src/types.ts` | Core interfaces: Money, Product, LineItem, Basket, Order, Payment, PricingEngine, TaxEngine |
-| `src/money.ts` | Money factory and currency-safe arithmetic |
-| `src/pricing.ts` | Pricing engine pipeline runner and built-in engines |
-| `src/tax.ts` | Tax engine runner and built-in engines |
-| `src/basket.ts` | Basket operations — add, remove, update, recalculate |
-| `src/order.ts` | Order operations — convert, pay, balance tracking |
-| `src/index.ts` | Public API exports |
+| File             | Responsibility                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------- |
+| `src/types.ts`   | Core interfaces: Money, Product, LineItem, Basket, Order, Payment, PricingEngine, TaxEngine |
+| `src/money.ts`   | Money factory and currency-safe arithmetic                                                  |
+| `src/pricing.ts` | Pricing engine pipeline runner and built-in engines                                         |
+| `src/tax.ts`     | Tax engine runner and built-in engines                                                      |
+| `src/basket.ts`  | Basket operations — add, remove, update, recalculate                                        |
+| `src/order.ts`   | Order operations — convert, pay, balance tracking                                           |
+| `src/index.ts`   | Public API exports                                                                          |
 
 ## Design Decisions
 

@@ -123,16 +123,17 @@ console.log(isFullyPaid(paid)); // true
 - **No payment processing.** The commerce layer reacts to payment events via callback URIs. It does not integrate with any gateway.
 - **Zero runtime dependencies.** Standalone — no dependency on any Verevoir package.
 
-## Documentation
+## Where it sits
 
-- [Commerce](https://verevoir.io/docs/commerce) — products, baskets, orders, payments, pricing and tax engines
-- [Integration Guide](https://verevoir.io/docs/integration) — connecting content models, storage, editor, and more
+- **[@verevoir/stripe](https://www.npmjs.com/package/@verevoir/stripe)** — payment gateway adapter. Feed Stripe webhook events into the order model here.
+- **[@verevoir/accounts](https://www.npmjs.com/package/@verevoir/accounts)** — tenancy boundary. Scope baskets and orders to an account.
+- **[@verevoir/bookings](https://www.npmjs.com/package/@verevoir/bookings)** — time-based inventory. Wire holds and bookings to commerce orders via the `orderId` field.
 
-## Development
+## Docs
 
-```bash
-npm install    # Install dependencies
-make build     # Compile TypeScript
-make test      # Run test suite
-make lint      # Check formatting
-```
+- [Commerce](https://verevoir.io/docs/commerce)
+- [Integration guide](https://verevoir.io/docs/integration)
+
+## License
+
+MIT

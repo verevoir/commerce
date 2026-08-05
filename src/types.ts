@@ -121,11 +121,7 @@ export type SubscriptionInterval = 'month' | 'year';
 
 /** Subscription lifecycle status. */
 export type SubscriptionStatus =
-  | 'trialling'
-  | 'active'
-  | 'past_due'
-  | 'paused'
-  | 'cancelled';
+  'trialling' | 'active' | 'past_due' | 'paused' | 'cancelled';
 
 /**
  * A subscription plan — a recurring product with a billing interval and feature set.

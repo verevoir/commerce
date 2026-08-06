@@ -1,0 +1,247 @@
+# @verevoir/commerce
+
+> Abstract e-commerce primitives — products, baskets, orders, payments, subscriptions, pricing engines and tax engines — with zero runtime dependencies and no Verevoir sibling imports.
+
+## Install
+
+```bash
+npm install @verevoir/commerce
+```
+
+## Core Exports
+
+### Money helpers
+
+```typescript
+import { money, addMoney, subtractMoney, multiplyMoney, zeroMoney } from '@verevoir/commerce';
+
+const price   = money(1000, 'GBP');          // { amount: 1000, currency: 'GBP' }
+const doubled = multiplyMoney(price, 2);     // { amount: 2000, currency: 'GBP' }
+const reduced = subtractMoney(doubled, price); // { amount: 1000, currency: 'GBP' }
+const sum     = addMoney(price, reduced);    // { amount: 2000, currency: 'GBP' }
+const zero    = zeroMoney('GBP');            // { amount: 0,    currency: 'GBP' }
+```
+
+All arithmetic functions throw if currencies do not match.
+
+### Pricing engines
+
+```typescript
+import {
+  resolvePrice,
+  fixedDiscountEngine,
+  percentageDiscountEngine,
+} from '@verevoir/commerce';
+import type { PricingEngine, EngineContext, Product } from '@verevoir/commerce';
+
+const product: Product = { id: 'p1', type: 'physical', basePrice: money(500, 'GBP') };
+const ctx: EngineContext = { customerId: 'u1', coupon: 'SAVE10' };
+
+// Built-in engines
+const tenPence = fixedDiscountEngine(money(10, 'GBP'));   // −£0.10 fixed
+const tenPct   = percentageDiscountEngine(0.1);           // −10 %
+
+// Run the pipeline — each stage receives the output of the previous one
+const unitPrice = resolvePrice(product, 2, [tenPct, tenPence], ctx);
+
+// Custom engine — implement PricingEngine to plug in your own logic
+const bulkEngine: PricingEngine = {
+  resolve(currentPrice, _product, quantity, _ctx) {
+    return quantity >= 10 ? multiplyMoney(currentPrice, 0.8) : currentPrice;
+  },
+};
+```
+
+`resolvePrice` returns `product.basePrice` unchanged when the engines array is empty.
+
+### Tax engines
+
+```typescript
+import {
+  calculateTax,
+  flatRateTaxEngine,
+  productTypeTaxEngine,
+} from '@verevoir/commerce';
+import type { TaxEngine } from '@verevoir/commerce';
+
+// 20 % flat VAT on every product
+const vatEngine = flatRateTaxEngine(0.2);
+
+// Different rates per product type, 0 % fallback
+const ukVat = productTypeTaxEngine({ physical: 0.2, digital: 0.2, food: 0 }, 0);
+
+// calculateTax returns zeroMoney when no engine is provided
+const tax = calculateTax(unitPrice, product, ukVat, ctx);
+
+// Custom engine — implement TaxEngine
+const zeroTax: TaxEngine = {
+  calculate(unitPrice) { return zeroMoney(unitPrice.currency); },
+};
+```
+
+### CommerceConfig
+
+Pass `CommerceConfig` to basket operations to wire pricing and tax together:
+
+```typescript
+import type { CommerceConfig } from '@verevoir/commerce';
+
+const config: CommerceConfig = {
+  pricingEngines: [percentageDiscountEngine(0.15)],
+  taxEngine: flatRateTaxEngine(0.2),
+  context: { region: 'GB' },
+};
+```
+
+### Basket
+
+```typescript
+import {
+  createBasket,
+  addItem,
+  removeItem,
+  updateItemQuantity,
+  recalculateBasket,
+  basketTotal,
+} from '@verevoir/commerce';
+
+let basket = createBasket('basket-1');
+
+// addItem resolves price and tax using config and appends/merges the line item
+basket = addItem(basket, product, 2, config);
+
+// Update quantity — re-resolves price and tax
+basket = updateItemQuantity(basket, 'p1', 5, config);
+
+// Remove a product entirely
+basket = removeItem(basket, 'p1');
+
+// Recalculate all line items when config changes
+basket = recalculateBasket(basket, [product], config);
+
+// Totals — returns null when the basket is empty
+const totals = basketTotal(basket);
+// { subtotal: Money, tax: Money, total: Money } | null
+```
+
+### Order
+
+```typescript
+import {
+  convertToOrder,
+  applyPayment,
+  updatePaymentStatus,
+  isFullyPaid,
+  changeOwed,
+  orderTotals,
+} from '@verevoir/commerce';
+import type { Payment } from '@verevoir/commerce';
+
+// Basket → Order (throws on empty basket)
+let order = convertToOrder(basket, 'order-1');
+
+const payment: Payment = {
+  id: 'pay-1',
+  amount: money(900, 'GBP'),
+  status: 'confirmed',
+  callbackUrls: { finalise: 'https://example.com/ok', cancel: 'https://example.com/cancel' },
+};
+
+order = applyPayment(order, payment);          // balance reduced by confirmed amount
+order = updatePaymentStatus(order, 'pay-1', 'refunded'); // recomputes balance
+
+isFullyPaid(order);  // true when balance ≤ 0
+changeOwed(order);   // Money — overpaid amount returned as change, zero otherwise
+orderTotals(order);  // { subtotal, tax, total }
+```
+
+Payment status semantics:
+- `confirmed` — reduces the balance
+- `refunded` — increases the balance (restores the debt)
+- `pending` / `failed` — recorded but do not affect the balance
+
+### Subscriptions
+
+```typescript
+import {
+  createSubscription,
+  updateSubscriptionStatus,
+  changeSubscriptionPlan,
+  renewSubscription,
+  isSubscriptionActive,
+  isInGracePeriod,
+  effectiveFeatures,
+  hasFeature,
+} from '@verevoir/commerce';
+import type {
+  CreateSubscriptionOptions,
+  SubscriptionPlan,
+  Subscription,
+} from '@verevoir/commerce';
+
+const plan: SubscriptionPlan = {
+  id: 'plan-pro',
+  type: 'subscription',
+  basePrice: money(1500, 'GBP'),
+  interval: 'month',
+  features: ['exports', 'api-access', 'priority-support'],
+};
+
+const now = Math.floor(Date.now() / 1000);
+
+const opts: CreateSubscriptionOptions = {
+  id: 'sub-1',
+  planId: 'plan-pro',
+  currentPeriodStart: now,
+  currentPeriodEnd: now + 30 * 86400,
+  status: 'active',       // optional, defaults to 'active'
+  externalId: 'sub_xxx',  // optional Stripe / billing-provider ID
+};
+
+let sub: Subscription = createSubscription(opts);
+
+// Lifecycle transitions — all return a new Subscription (immutable)
+sub = updateSubscriptionStatus(sub, 'past_due');
+sub = changeSubscriptionPlan(sub, 'plan-starter');
+sub = renewSubscription(sub, now, now + 30 * 86400); // forces status → 'active'
+
+// Status checks
+isSubscriptionActive(sub);         // true when status is 'active' or 'trialling'
+isInGracePeriod(sub);              // true when 'past_due' and inside currentPeriodEnd
+
+// Feature entitlement
+effectiveFeatures(sub, plan);      // string[] — plan.features when active, [] otherwise
+hasFeature(sub, plan, 'exports');  // boolean
+```
+
+`effectiveFeatures` returns `[]` when `subscription.planId !== plan.id` or when the subscription is not active/trialling. `isInGracePeriod` accepts an optional `now` argument (seconds since epoch) for testing.
+
+## Types
+
+| Type | Purpose |
+|---|---|
+| `Money` | `{ amount: number; currency: string }` |
+| `Product` | Minimum product shape: `id`, `type`, `basePrice` |
+| `LineItem` | Resolved basket/order line: `productId`, `productType`, `quantity`, `unitPrice`, `tax`, `lineTotal` |
+| `Basket` | `{ id, items: readonly LineItem[] }` |
+| `Order` | `{ id, items, balance, payments }` |
+| `Payment` | `{ id, amount, status, callbackUrls? }` |
+| `PaymentStatus` | `'pending' \| 'confirmed' \| 'failed' \| 'refunded'` |
+| `PaymentCallbackUrls` | `{ finalise?, cancel?, refund? }` |
+| `PricingEngine` | `{ resolve(currentPrice, product, quantity, context): Money }` |
+| `TaxEngine` | `{ calculate(unitPrice, product, context): Money }` |
+| `EngineContext` | `Record<string, unknown>` — pass arbitrary domain data to engines |
+| `CommerceConfig` | `{ pricingEngines?, taxEngine?, context? }` |
+| `SubscriptionPlan` | Extends `Product` with `interval` and `features` |
+| `Subscription` | `{ id, planId, status, currentPeriodStart, currentPeriodEnd, trialEnd?, externalId? }` |
+| `SubscriptionInterval` | `'month' \| 'year'` |
+| `SubscriptionStatus` | `'trialling' \| 'active' \| 'past_due' \| 'paused' \| 'cancelled'` |
+| `CreateSubscriptionOptions` | Input shape for `createSubscription` |
+
+## Notes
+
+- All amounts are plain numbers — choose your own unit (pence, cents, etc.) and be consistent.
+- All operations are pure and immutable; no internal state or singletons.
+- `Product` is a minimum interface — extend it freely; commerce only reads `id`, `type`, and `basePrice`.
+- `EngineContext` is an open record; pass customer tiers, coupon codes, region data, etc.
+- Pricing engines compose as a pipeline: supply them in the order they should execute.
